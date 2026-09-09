@@ -1,0 +1,17 @@
+# Secrets
+.env
+.env.*
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Run artifacts and generated viewers embed quoted log content.
+# Commit deliberately, if at all.
+runs/
+reports/
+
+# OS
+.DS_Store
