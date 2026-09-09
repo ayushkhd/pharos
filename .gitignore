@@ -15,3 +15,10 @@ reports/
 
 # OS
 .DS_Store
+
+# Packaged bundles (run archives, submissions)
+*.zip
+
+# Type-checker and test caches
+.mypy_cache/
+.pytest_cache/
