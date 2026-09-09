@@ -11,6 +11,9 @@ dependencies = []
 [project.optional-dependencies]
 openai = ["openai>=1.50"]
 
+[project.scripts]
+pharos = "pharos.cli:main"
+
 [dependency-groups]
 dev = [
   "isort>=5.13",
