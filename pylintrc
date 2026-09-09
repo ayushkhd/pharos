@@ -5,8 +5,8 @@
 # changes:
 #   * 2-space indentation, as used inside google3 (the public guide says 4).
 #   * Python 2 compatibility messages removed; pylint 4 no longer knows them.
-#   * The docparams extension is enabled and made strict, so a docstring that
-#     omits an argument, return value, or raised exception is a lint error.
+#   * The docparams extension is enabled, so a docstring that omits an
+#     argument or a raised exception is a lint error.
 #
 # Refactor-class (R) messages stay disabled, as in Google's config: code
 # structure is a review concern, not a linter concern.
@@ -64,8 +64,11 @@ docstring-min-length=12
 [PARAMETER_DOCUMENTATION]
 accept-no-param-doc=no
 accept-no-raise-doc=no
-accept-no-return-doc=no
-accept-no-yields-doc=no
+# The style guide lets a docstring omit its Returns section when the
+# summary line itself starts with "Returns"; pylint cannot tell those
+# apart from genuinely undocumented returns, so return docs are advisory.
+accept-no-return-doc=yes
+accept-no-yields-doc=yes
 default-docstring-type=google
 
 [TYPECHECK]
