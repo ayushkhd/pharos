@@ -5,6 +5,10 @@ import pathlib
 from typing import Any
 
 from pharos import data
+from pharos import render
+from pharos import schema
+from pharos import store
+from pharos import validate
 
 # A small but realistic shape: task setup, agent narration, tool echo,
 # a mid-trajectory user turn, and a final agent summary.
@@ -81,3 +85,77 @@ def write_dataset(
     lines.append(json.dumps(record))
   path.write_text("\n".join(lines) + "\n", encoding="utf-8")
   return path
+
+
+def make_result(
+    traj: data.Trajectory,
+    verdict: str | None,
+    findings: list[tuple[str, int, list[int]]] | None = None,
+    run_id: str = "run",
+    status: str = "ok",
+) -> schema.Result:
+  """Builds a validated result from a verdict and (category, sev, idx) triples.
+
+  Args:
+    traj: The trajectory the result is for.
+    verdict: The verdict, or ``None`` for a failed result.
+    findings: Findings as (category, severity, evidence indices) triples.
+    run_id: Run id to record.
+    status: Execution status before validation.
+
+  Returns:
+    The result, exactly as the runner would persist it.
+  """
+  parsed = None
+  if verdict is not None:
+    parsed = {
+        "verdict": verdict,
+        "summary": f"{verdict} summary",
+        "findings": [
+            {
+                "category": category,
+                "evidence_indices": indices,
+                "quotes": [],
+                "observed_behavior": f"{category} at {indices}",
+                "severity": severity,
+                "limitations": [],
+            }
+            for category, severity, indices in (findings or [])
+        ],
+    }
+  return validate.build_result(
+      traj,
+      run_id=run_id,
+      coverage=render.full_coverage(traj),
+      model_info={"provider": "fake", "model": "m", "reasoning_effort": "low"},
+      raw_response_path=None,
+      parsed=parsed,
+      status=status,
+  )
+
+
+def write_run(
+    root: pathlib.Path,
+    name: str,
+    results: list[schema.Result],
+    manifest: dict[str, Any] | None = None,
+) -> pathlib.Path:
+  """Persists results as a complete run directory.
+
+  Args:
+    root: Directory that holds runs.
+    name: Run name.
+    results: Results to write.
+    manifest: Extra manifest fields.
+
+  Returns:
+    The run directory.
+  """
+  run_dir = store.new_run_dir(root, name)
+  store.write_manifest(
+      run_dir, {"run_id": run_dir.name, "provider": "fake"} | (manifest or {})
+  )
+  for result in results:
+    store.write_result(run_dir, result)
+  store.finalize(run_dir)
+  return run_dir
